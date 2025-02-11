@@ -1,0 +1,39 @@
+{
+  "id": "434f95e1-62b4-4ce1-a46d-9317d483c259",
+  "name": "DynamicSharePoint",
+  "publisher": "Mir Kasim Ali Naqvi",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+
+  ],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "24.5.23489.23968",
+  "idRanges": [
+      {
+          "from": 99990,
+          "to": 99999
+      }
+  ],
+  "resourceExposurePolicy": {
+      "allowDebugging": false,
+      "allowDownloadingSource": false,
+      "includeSourceInSymbolFile": false,
+      "applyToDevExtension": false
+  },
+  "runtime": "14.2",
+  "propagateDependencies": true,
+  "features": [
+      "NoImplicitWith",
+      "NoPromotedActionProperties",
+      "UseLegacyAnalyzerStrategy"
+  ]
+}
+ 
