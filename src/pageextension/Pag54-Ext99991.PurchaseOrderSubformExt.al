@@ -1,4 +1,4 @@
-pageextension 99991 "Sales Order Subform Ext" extends "Sales Order Subform" //46
+pageextension 99991 "Purchase Order Subform Ext" extends "Purchase Order Subform" //54
 {
     actions
     {

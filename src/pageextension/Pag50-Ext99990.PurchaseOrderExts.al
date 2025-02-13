@@ -1,4 +1,4 @@
-pageextension 99990 "Sales Order Exts" extends "Sales Order" //42
+pageextension 99990 "Purchase Order Exts" extends "Purchase Order" //50
 {
     layout
     {
