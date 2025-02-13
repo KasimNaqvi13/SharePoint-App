@@ -263,22 +263,6 @@ codeunit 99991 "SharePoint List Log Management"
     // #endregion Purchase Archive
 
 
-    #region Sales Archive
-    // Sales Quote ----> Sales Quotes Archive
-    // Header OnAfterSalesHeaderArchiveInsert
-    // Line OnAfterStoreSalesLineArchive
-    // Dragon
-    // Sales Quote ----> Sales order
-    // OnAfterInsertAllSalesOrderLines or OnBeforeDeleteSalesQuote
-    // Dragon
-    // Sales order ----> Sales Order Archive
-    // Header OnAfterSalesHeaderArchiveInsert & Line OnAfterStoreSalesLineArchive
-    // Dragon
-    // Sales order ----> Posted sales invoice
-    // ?
-    // Dragon//     
-    #endregion Sales Archive
-
 
 
 
