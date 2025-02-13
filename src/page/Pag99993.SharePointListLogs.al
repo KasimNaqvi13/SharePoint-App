@@ -1,7 +1,7 @@
 page 99993 "SharePoint List Logs"
 {
     ApplicationArea = All;
-    Caption = 'E2E Share Point List Documents';
+    Caption = 'SharePoint List Log';
     PageType = List;
     SourceTable = "SharePoint List Log";
     UsageCategory = Lists;
@@ -71,6 +71,7 @@ page 99993 "SharePoint List Logs"
                 field(Link; Rec.Link)
                 {
                     ToolTip = 'Specifies the value of the Link field.', Comment = '%';
+                    ExtendedDatatype = URL;
                 }
                 field("Table ID"; Rec."Table ID")
                 {

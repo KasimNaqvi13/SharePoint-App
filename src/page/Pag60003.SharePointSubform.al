@@ -1,260 +1,238 @@
-// page 60003 "SharePoint Subform"
-// {
-//     ApplicationArea = All;
-//     Caption = 'E2E-SharePoint Subform';
-//     PageType = List;
-//     SourceTable = "SharePoint Lists";
-//     Editable = false;
-//     InsertAllowed = false;
-//     DeleteAllowed = false;
-//     UsageCategory = None;
-//     RefreshOnActivate = true;
+page 99994 "SharePoint List Log Subform"
+{
+    ApplicationArea = All;
+    Caption = 'SharePoint List Log Subform';
+    PageType = List;
+    SourceTable = "SharePoint List Log";
+    Editable = false;
+    InsertAllowed = false;
+    DeleteAllowed = false;
+    UsageCategory = None;
+    RefreshOnActivate = true;
 
 
-//     layout
-//     {
-//         area(content)
-//         {
-//             repeater(General)
-//             {
+    #region layout
+    layout
+    {
+        area(content)
+        {
+            repeater(General)
+            {
 
-//                 field(Name; Rec.Name)
-//                 {
-//                     Editable = false;
-//                     ApplicationArea = all;
-//                     trigger OnDrillDown()
-//                     var
-//                         SharepointMgt: Codeunit "Sharepoint Management";
-//                     begin
-//                         SharepointMgt.OpenFile(Rec."Server Relative Url");
-//                     end;
-//                 }
-//                 field(Link; Rec.Link)
-//                 {
-//                     Editable = false;
-//                     ApplicationArea = all;
-//                     ExtendedDatatype = URL;
-//                 }
-//             }
-//         }
-//     }
+                field(Name; Rec.Name)
+                {
+                    Editable = false;
+                    ApplicationArea = all;
+                    trigger OnDrillDown()
+                    var
+                        inst: InStream;
+                    begin
+                        SharepointMgt.OpenFile(Rec."Server Relative Url", inst, true);
+                    end;
+                }
+                field(Link; Rec.Link)
+                {
+                    Editable = false;
+                    ApplicationArea = all;
+                    ExtendedDatatype = URL;
+                }
+            }
+        }
+    }
+    #endregion layout
 
-//     // ------ Action--------
-//     actions
-//     {
-//         area(Processing)
-//         {
-//             //Action 1
-//             action(UploadFile)
-//             {
-//                 ApplicationArea = All;
-//                 Caption = 'Upload File';
-//                 Image = NewDocument;
-//                 Visible = ActionVisible;
-//                 trigger OnAction()
-//                 var
-//                     IS: InStream;
-//                     TempBlob: Codeunit "Temp Blob";
-//                     SharepointMgt: Codeunit "Sharepoint Management";
-//                     FromFileName: Text;
-//                     lRecordRef: RecordRef;
-//                     Ishandle: Boolean;
-//                 begin
-//                     Clear(lRecordId);
-//                     lRecordId := Getrecord();
-//                     OnBeforeActionSharePoint(lRecordId, Ishandle);
-//                     if Ishandle then
-//                         exit;
-//                     GetParentDirectoryFolderURL(lRecordId);
-//                     IS := TempBlob.CreateInStream();
-//                     UploadIntoStream('Please Upload a File', '', '', FromFileName, IS);
-//                     if SharepointMgt.SaveFile(FinalURL, FromFileName, IS, lRecordId, IS) then begin
-//                         Message('File has been uploaded successfully!!');
-//                     end;
-//                 end;
+    #region Action
+    actions
+    {
+        area(Processing)
+        {
+            fileuploadaction("Upload Files")
+            {
+                AllowMultipleFiles = true;
+                Caption = 'Upload Files';
+                ApplicationArea = all;
+                Gesture = RightSwipe;
+                Visible = ActionVisible;
+                Image = Add;
+                trigger OnAction(Files: List of [FileUpload])
+                var
+                    CurrentFile: FileUpload;
+                    Inst: InStream;
+                    FromFileName: Text;
+                    Ishandle: Boolean;
+                begin
+                    OnBeforeUpload(Rec, Getrecord, Ishandle);
+                    if Ishandle then
+                        exit;
+                    GetParentDirectoryFolderURL(Getrecord());
+                    foreach currentFile in files do begin
+                        FromFileName := CurrentFile.FileName;
+                        CurrentFile.CreateInStream(Inst);
+                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord(), Inst);
+                    end;
+                end;
+            }
+            action(Download)
+            {
+                ApplicationArea = All;
+                Caption = 'Download File';
+                Image = Download;
+                Visible = ActionVisible;
+                trigger OnAction()
+                var
+                    Instr: InStream;
+                    IsHandle: Boolean;
+                begin
+                    OnBeforeDownload(Rec);
+                    if Ishandle then
+                        exit;
+                    SharepointMgt.OpenFile(Rec."Server Relative Url", Instr, true);
+                end;
+            }
+            action(DeleteFile)
+            {
+                ApplicationArea = All;
+                Caption = 'Delete File';
+                Image = Delete;
+                Visible = ActionVisible;
 
-//             }
-//             action(Download)
-//             {
-//                 ApplicationArea = All;
-//                 Caption = 'Download File';
-//                 Image = Download;
-//                 Visible = ActionVisible;
-//                 trigger OnAction()
-//                 var
-//                     SharepointMgt: Codeunit "Sharepoint Management";
-//                 begin
-//                     SharepointMgt.OpenFile(Rec."Server Relative Url");
-//                 end;
-//             }
+                trigger OnAction()
+                var
+                    Ishandle: Boolean;
+                begin
+                    OnBeforeDeleteSharepointFile(Rec, Getrecord(), Ishandle);
+                    if Ishandle then
+                        exit;
+                    SharepointMgt.DeleteFile(Rec, Rec."Server Relative Url");
+                end;
+            }
 
-//             action(DeleteFile)
-//             {
-//                 ApplicationArea = All;
-//                 Caption = 'Delete File';
-//                 Image = Delete;
-//                 Visible = ActionVisible;
+        }
+        area(Promoted)
+        {
+            actionref("Upload FilesRef"; "Upload Files")
+            {
 
-//                 trigger OnAction()
-//                 var
-//                     lRecordRef: RecordRef;
-//                     lRecordId: RecordId;
-//                     RecordLinks: Record "Record Link";
-//                     Ishandle: Boolean;
-//                     RecPurchaseHead: Record "Purchase Header";
-//                 begin
-//                     Clear(lRecordId);
-//                     lRecordId := Getrecord();
-//                     OnBeforeDeleteSharepointFile(lRecordId, Ishandle);
-//                     if Ishandle then
-//                         exit;
-//                     DeleteFileFromSharepoint(Rec);
-//                 end;
-//             }
+            }
+            actionref(DownloadRef; Download)
+            {
 
-//         }
+            }
+            actionref(DeleteFileRef; DeleteFile)
+            {
 
-//         area(Promoted)
-//         {
-//             actionref(UploadFiles; UploadFile)
-//             {
+            }
 
-//             }
-//             actionref(Downloads; Download)
-//             {
+        }
+    }
+    #endregion Action
 
-//             }
-//             actionref(DeleteFiles; DeleteFile)
-//             {
+    #region Local Procedure
+    local procedure GetParentDirectoryFolderURL(lRecordId: RecordId) //CIT245 #Sharepoint
+    var
+        SharepointSetup: Record "Sharepoint Setup";
+        IsHandle: Boolean;
+    begin
+        OnBeforeGetParentDirectoryFolderURL(lRecordId, IsHandle, FinalURL);
+        if IsHandle then
+            exit;
 
-//             }
-
-//         }
-
-
-//     }
-
-//     procedure GetParentDirectoryFolderURL(lRecordId: RecordId) //CIT245 #Sharepoint
-//     var
-//         SharepointSetup: Record "Sharepoint Setup";
-//         IsHandle: Boolean;
-//     begin
-//         OnBeforeGetParentDirectoryFolderURL(lRecordId, IsHandle);
-//         if IsHandle then
-//             exit;
-
-//         case lRecordId.TableNo of
-//             Database::"Purchase Header":
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Purchase Directory";
-//                     end;
-//                 end;
-//             Database::"Purchase Line":
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Purchase Directory";
-//                     end;
-//                 end;
-//             Database::Vendor:
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Vendor Directory"; // 
-//                     end;
-//                 end;
-//             Database::Customer:
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Customer Directory";
-//                     end;
-//                 end;
-//             Database::"Sales Header":
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Sales Directory";
-//                     end;
-//                 end;
-//             Database::"Sales Line":
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Sales Directory";
-//                     end;
-//                 end;
-//             Database::job:
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Project Directory";
-//                     end;
-//                 end;
-//             Database::"Job Task":
-//                 begin
-//                     if SharepointSetup.Get() then begin
-//                         FinalURL := SharepointSetup."Project Directory";
-//                     end;
-//                 end;
-//             else
-//                 // Default Url
-//                 if SharepointSetup.Get() then begin
-//                     FinalURL := SharepointSetup."Default Directory";
-//                 end
-//         end;
-//     end;
-
-//     procedure DeleteFileFromSharepoint(E2ESharepoint: Record "SharePoint Lists")
-//     var
-//         SharepointMgt: Codeunit "Sharepoint Management";
-//         ConfirmManagement: Codeunit "Confirm Management";
-//     begin
-//         if ConfirmManagement.GetResponseOrDefault('Do you want to Delete the File ?', false) then begin
-//             SharepointMgt.DeleteFile(Rec."Server Relative Url");
-//             if E2ESharepoint.Delete() then begin
-
-//             end;
-//         end;
-//     end;
+        case lRecordId.TableNo of
+            Database::Vendor:
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Vendor Directory"; // 
+                end;
+            Database::"Purchase Header":
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Purchase Directory";
+                end;
+            Database::"Purchase Line":
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Purchase Directory";
+                end;
+            Database::Customer:
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Customer Directory";
+                end;
+            Database::"Sales Header":
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Sales Directory";
+                    ;
+                end;
+            Database::"Sales Line":
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Sales Directory";
+                end;
+            else
+                SharepointSetup.Get();
+                FinalURL := SharepointSetup."Default Directory";
+        end
+    end;
+    #endregion Local Procedure
 
 
-//     procedure Setrecord(variant: Variant; Visible: Boolean)
-//     begin
-//         ActionVisible := Visible;
-//         Clear(GReocrdID);
-//         if variant.IsRecordId then
-//             GReocrdID := variant;
-//     end;
 
-//     procedure Getrecord(): RecordId
-//     begin
-//         exit(GReocrdID);
-//     end;
+    #region Global Procedure
+    procedure Setrecord(variant: Variant; Visible: Boolean)
+    begin
+        ActionVisible := Visible;
+        if variant.IsRecordId then
+            GReocrdID := variant;
+    end;
 
-//     var
-//         GReocrdID: RecordId;
-
-//         BooleanVar: boolean;
-
-//     var
-//         ParentFolderURL: Text;
-//         FinalURL: Text;
-//         RetrieveURL: Text;
-//         lRecordId: RecordId;
-//         ActionVisible: Boolean;
+    procedure Getrecord(): RecordId
+    begin
+        exit(GReocrdID);
+    end;
+    #endregion Global Procedure
 
 
-//     [IntegrationEvent(false, false)]
-//     local procedure OnBeforeGetParentDirectoryFolderURL(lRecordId: RecordId; Ishandle: Boolean)
-//     begin
 
-//     end;
 
-//     [IntegrationEvent(false, false)]
-//     local procedure OnBeforeDeleteSharepointFile(lRecordId: RecordId; Ishandle: Boolean)
-//     begin
+    #region Global Variable
+    var
+        GReocrdID: RecordId;
+        ActionVisible: Boolean;
 
-//     end;
+    #endregion Global Variable
+    #region local variable
+    var
 
-//     [IntegrationEvent(false, false)]
-//     local procedure OnBeforeActionSharePoint(lRecordId: RecordId; Ishandle: Boolean)
-//     begin
+        FinalURL: Text;
+        ParentFolderURL: Text;
+        RetrieveURL: Text;
+        SharepointMgt: Codeunit "Sharepoint Management";
+    #endregion local variable
 
-//     end;
-// }
+
+
+    #region Events
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeGetParentDirectoryFolderURL(RecordId: RecordId; Ishandle: Boolean; var FinalURL: Text)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeUpload(var SharePointListLog: Record "SharePoint List Log"; RecordId: RecordId; Ishandle: Boolean)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeDownload(var SharePointListLog: Record "SharePoint List Log")
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeDeleteSharepointFile(var SharePointListLog: Record "SharePoint List Log"; RecordId: RecordId; Ishandle: Boolean)
+    begin
+    end;
+    #endregion Events
+
+
+}

@@ -117,11 +117,16 @@ page 99991 "SharePointListLog Factbox"
         SharepointSetup: Record "Sharepoint Setup";
         IsHandle: Boolean;
     begin
-        OnBeforeGetParentDirectoryFolderURL(lRecordId, IsHandle);
+        OnBeforeGetParentDirectoryFolderURL(lRecordId, IsHandle, FinalURL);
         if IsHandle then
             exit;
 
         case lRecordId.TableNo of
+            Database::Vendor:
+                begin
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Vendor Directory"; // 
+                end;
             Database::"Purchase Header":
                 begin
                     SharepointSetup.Get();
@@ -131,11 +136,6 @@ page 99991 "SharePointListLog Factbox"
                 begin
                     SharepointSetup.Get();
                     FinalURL := SharepointSetup."Purchase Directory";
-                end;
-            Database::Vendor:
-                begin
-                    SharepointSetup.Get();
-                    FinalURL := SharepointSetup."Vendor Directory"; // 
                 end;
             Database::Customer:
                 begin
@@ -154,7 +154,6 @@ page 99991 "SharePointListLog Factbox"
                     FinalURL := SharepointSetup."Sales Directory";
                 end;
             else
-                // Default Url
                 SharepointSetup.Get();
                 FinalURL := SharepointSetup."Default Directory";
         end
@@ -199,7 +198,7 @@ page 99991 "SharePointListLog Factbox"
 
     #region Events
     [IntegrationEvent(false, false)]
-    local procedure OnBeforeGetParentDirectoryFolderURL(RecordId: RecordId; Ishandle: Boolean)
+    local procedure OnBeforeGetParentDirectoryFolderURL(RecordId: RecordId; Ishandle: Boolean; var FinalURL: Text)
     begin
     end;
 
