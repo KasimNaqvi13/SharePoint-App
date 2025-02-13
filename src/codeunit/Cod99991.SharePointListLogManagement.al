@@ -130,6 +130,8 @@ codeunit 99991 "SharePoint List Log Management"
         SharepointSetupRec: Record "Sharepoint Setup";
     begin
         SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
         SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
         SharePointListLog.SetRange("Table Record ID", PurchaseHeader.RecordId);
         if SharePointListLog.FindSet() then begin
@@ -154,6 +156,8 @@ codeunit 99991 "SharePoint List Log Management"
         SharepointSetupRec: Record "Sharepoint Setup";
     begin
         SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
         SharePointListLog.SetRange("Table Record ID", PurchLine.RecordId);
         if SharePointListLog.FindSet() then begin
             repeat
@@ -184,6 +188,8 @@ codeunit 99991 "SharePoint List Log Management"
         PurchaseLineRec: Record "Purchase Line";
     begin
         SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
         //Header
         SharePointListLog.SetRange("Table Record ID", QuotePurchHeader.RecordId);
         if SharePointListLog.FindSet() then begin
@@ -236,6 +242,8 @@ codeunit 99991 "SharePoint List Log Management"
         PurchLine: Record "Purchase Line";
     begin
         SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
         //Header
         SharePointListLog.SetRange("Table Record ID", PurchaseHeader.RecordId);
         if SharePointListLog.FindSet() then begin
