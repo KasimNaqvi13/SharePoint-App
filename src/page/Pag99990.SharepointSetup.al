@@ -60,10 +60,6 @@ page 99990 "Sharepoint Setup"
                 field("Sales Directory"; Rec."Sales Directory")
                 {
                 }
-                field("Project Directory"; Rec."Project Directory")
-                {
-
-                }
                 field("Customer Directory"; Rec."Customer Directory")
                 {
 

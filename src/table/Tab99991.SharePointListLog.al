@@ -1,6 +1,5 @@
-table 99991 "SharePoint Lists"
+table 99991 "SharePoint List Log"
 {
-    Caption = 'E2E Share-Point';
     DataClassification = ToBeClassified;
 
     fields
@@ -60,7 +59,7 @@ table 99991 "SharePoint Lists"
         {
             Caption = 'Id';
         }
-        field(12; "Record ID" ; RecordId)
+        field(12; "Table Record ID" ; RecordId)
         {
 
         }
@@ -72,59 +71,93 @@ table 99991 "SharePoint Lists"
         {
             
         }
-        field(15; "Document No"; Code [20] )
+        field(15; "Table ID"; Integer)
         {
 
         }
-        field(16; "Document Type"; Enum "SharePoint Document Type")
+        field(16; "Table Name"; Text[250])
         {
 
         }
-        field(17; "Line No"; Integer)
+        field(17; "Archived Version"; Integer)
         {
 
         }
-        //Option Field Change As you Want 
-        field(18; "Project No"; Code[20])
-        {
 
-        }
-        field(19; "Project Task No"; Code[20])
+        field(18; "Code PK 1"; Code[250])
         {
             
         }
-        field(20; Description; Text[500])
+        field(19; "Code PK 2"; Code[250])
+        {
+            
+        }
+        field(20; "Code PK 3"; Code[250])
+        {
+            
+        }
+        field(21; "Integer PK 1"; Integer)
+        {
+            
+        }
+        field(22; "Integer PK 2"; Integer)
+        {
+            
+        }
+        field(23; "Integer PK 3"; Integer)
+        {
+            
+        }
+         field(24 ; "SharePoint Enum"; Enum "SharePoint Document Type") // If you're Document Type not available please extends and add yours document type with enum extension 
+        {
+            
+        }
+        field( 25; "Text Pk 1"; Text[1048])
+        {
+            
+        }
+        field(26;  "Text Pk 2"; Text[1048])
+        {
+            
+        }
+        Field(27 ;  "Text Pk 3"; Text[1048])
+        {
+            
+        }
+        field(28; "GUID PK 1"; Guid)
         {
 
         }
-        field(21; "Table ID"; Integer)
+        field(29; "GUID PK 2"; Guid)
         {
 
         }
-        field(22; "Table Name"; Text[250])
+        field(30; "GUID PK 3"; Guid)
         {
 
         }
-        field(23; "Archived Version"; Integer)
+        field(31; "Decimal PK 1"; Decimal)
         {
 
         }
-        field(24; "Custom Type 1"; Code[20])
+        field(32; "Decimal PK 2"; Decimal)
         {
+
         }
-        field(25 ; "Custom Type 2"; Code[20])
+        field(33; "Decimal PK 3"; Decimal)
         {
+
         }
     }
 
     // Key
     keys
     {
-        key(PK; "Unique Id","Record ID",Name)
+        key(PK; "Unique Id","Table Record ID",Name)
         {
             Clustered = true;
         }
-        key(Key2; "Document No", "Line No", Link, "Unique Id", Name)
+        key(Key2; Link, "Unique Id", Name)
         {
             Enabled = true;
         }

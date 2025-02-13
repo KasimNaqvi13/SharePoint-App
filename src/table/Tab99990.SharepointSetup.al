@@ -61,19 +61,11 @@ table 99990 "Sharepoint Setup"
         {
             DataClassification = ToBeClassified;
         }
-        field(11; "Project Directory"; Text[500])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(12; "Estimation Directory"; Text[500])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(13; "Azure App Name"; Text[2048])
+        field(11; "Azure App Name"; Text[2048])
         {
 
         }
-        field(14; "File Upload Method"; Enum "Sharepoint File Upload Method")
+        field(12; "File Upload Method"; Enum "Sharepoint File Upload Method")
         {
             DataClassification = ToBeClassified;
         }

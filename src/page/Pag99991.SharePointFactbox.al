@@ -1,14 +1,17 @@
-page 99991 "SharePoint Factbox"
+page 99991 "SharePointListLog Factbox"
 {
     ApplicationArea = All;
-    Caption = 'E2E-SharePoint Factobox';
+    Caption = 'SharePoint Lists';
     PageType = ListPart;
-    SourceTable = "SharePoint Lists";
+    SourceTable = "SharePoint List Log";
     RefreshOnActivate = true;
     LinksAllowed = True;
     Editable = false;
     InsertAllowed = false;
     DeleteAllowed = false;
+
+
+    #region layout
     layout
     {
         area(content)
@@ -22,9 +25,9 @@ page 99991 "SharePoint Factbox"
                     ApplicationArea = all;
                     trigger OnDrillDown()
                     var
-                        SharepointMgt: Codeunit "Sharepoint Management";
+                        inst: InStream;
                     begin
-                        SharepointMgt.OpenFile(Rec."Server Relative Url");
+                        SharepointMgt.OpenFile(Rec."Server Relative Url", inst, true);
                     end;
                 }
                 field(Link; Rec.Link)
@@ -36,41 +39,38 @@ page 99991 "SharePoint Factbox"
             }
         }
     }
+    #endregion layout
 
-    // ------ Action--------
+    #region Action
     actions
     {
         area(Processing)
         {
-            //Action 1
-            action(UploadFile)
+            fileuploadaction("Upload Files")
             {
-                ApplicationArea = All;
-                Caption = 'Upload File';
-                Image = NewDocument;
+                AllowMultipleFiles = true;
+                Caption = 'Upload Files';
+                ApplicationArea = all;
+                Gesture = RightSwipe;
                 Visible = ActionVisible;
-                trigger OnAction()
+                Image = Add;
+                trigger OnAction(Files: List of [FileUpload])
                 var
-                    IS: InStream;
-                    TempBlob: Codeunit "Temp Blob";
-                    SharepointMgt: Codeunit "Sharepoint Management";
+                    CurrentFile: FileUpload;
+                    Inst: InStream;
                     FromFileName: Text;
-                    lRecordRef: RecordRef;
                     Ishandle: Boolean;
                 begin
-                    Clear(lRecordId);
-                    lRecordId := Getrecord();
-                    OnBeforeActionSharePoint(lRecordId, Ishandle);
+                    OnBeforeUpload(Rec, Getrecord, Ishandle);
                     if Ishandle then
                         exit;
-                    GetParentDirectoryFolderURL(lRecordId);
-                    IS := TempBlob.CreateInStream();
-                    UploadIntoStream('Please Upload a File', '', '', FromFileName, IS);
-                    if SharepointMgt.SaveFile(FinalURL, FromFileName, IS, lRecordId, IS) then begin
-                        Message('File has been uploaded successfully!!');
+                    GetParentDirectoryFolderURL(Getrecord());
+                    foreach currentFile in files do begin
+                        FromFileName := CurrentFile.FileName;
+                        CurrentFile.CreateInStream(Inst);
+                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord(), Inst);
                     end;
                 end;
-
             }
             action(Download)
             {
@@ -80,12 +80,15 @@ page 99991 "SharePoint Factbox"
                 Visible = ActionVisible;
                 trigger OnAction()
                 var
-                    SharepointMgt: Codeunit "Sharepoint Management";
+                    Instr: InStream;
+                    IsHandle: Boolean;
                 begin
-                    SharepointMgt.OpenFile(Rec."Server Relative Url");
+                    OnBeforeDownload(Rec);
+                    if Ishandle then
+                        exit;
+                    SharepointMgt.OpenFile(Rec."Server Relative Url", Instr, true);
                 end;
             }
-
             action(DeleteFile)
             {
                 ApplicationArea = All;
@@ -95,26 +98,21 @@ page 99991 "SharePoint Factbox"
 
                 trigger OnAction()
                 var
-                    lRecordRef: RecordRef;
-                    lRecordId: RecordId;
-                    RecordLinks: Record "Record Link";
                     Ishandle: Boolean;
-                    RecPurchaseHead: Record "Purchase Header";
                 begin
-                    Clear(lRecordId);
-                    lRecordId := Getrecord();
-                    OnBeforeDeleteSharepointFile(lRecordId, Ishandle);
+                    OnBeforeDeleteSharepointFile(Rec, Getrecord(), Ishandle);
                     if Ishandle then
                         exit;
-                    DeleteFileFromSharepoint(Rec);
+                    SharepointMgt.DeleteFile(Rec, Rec."Server Relative Url");
                 end;
             }
 
         }
-
     }
+    #endregion Action
 
-    procedure GetParentDirectoryFolderURL(lRecordId: RecordId) //CIT245 #Sharepoint
+    #region Local Procedure
+    local procedure GetParentDirectoryFolderURL(lRecordId: RecordId) //CIT245 #Sharepoint
     var
         SharepointSetup: Record "Sharepoint Setup";
         IsHandle: Boolean;
@@ -126,78 +124,49 @@ page 99991 "SharePoint Factbox"
         case lRecordId.TableNo of
             Database::"Purchase Header":
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Purchase Directory";
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Purchase Directory";
                 end;
             Database::"Purchase Line":
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Purchase Directory";
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Purchase Directory";
                 end;
             Database::Vendor:
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Vendor Directory"; // 
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Vendor Directory"; // 
                 end;
             Database::Customer:
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Customer Directory";
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Customer Directory";
                 end;
             Database::"Sales Header":
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Sales Directory";
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Sales Directory";
+                    ;
                 end;
             Database::"Sales Line":
                 begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Sales Directory";
-                    end;
-                end;
-            Database::job:
-                begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Project Directory";
-                    end;
-                end;
-            Database::"Job Task":
-                begin
-                    if SharepointSetup.Get() then begin
-                        FinalURL := SharepointSetup."Project Directory";
-                    end;
+                    SharepointSetup.Get();
+                    FinalURL := SharepointSetup."Sales Directory";
                 end;
             else
                 // Default Url
-                if SharepointSetup.Get() then begin
-                    FinalURL := SharepointSetup."Default Directory";
-                end
-        end;
+                SharepointSetup.Get();
+                FinalURL := SharepointSetup."Default Directory";
+        end
     end;
-
-    procedure DeleteFileFromSharepoint(E2ESharepoint: Record "SharePoint Lists")
-    var
-        SharepointMgt: Codeunit "Sharepoint Management";
-        ConfirmManagement: Codeunit "Confirm Management";
-    begin
-        if ConfirmManagement.GetResponseOrDefault('Do you want to Delete the File ?', false) then begin
-            SharepointMgt.DeleteFile(Rec."Server Relative Url");
-            if E2ESharepoint.Delete() then begin
-
-            end;
-        end;
-    end;
+    #endregion Local Procedure
 
 
+
+    #region Global Procedure
     procedure Setrecord(variant: Variant; Visible: Boolean)
     begin
         ActionVisible := Visible;
-        Clear(GReocrdID);
         if variant.IsRecordId then
             GReocrdID := variant;
     end;
@@ -206,35 +175,49 @@ page 99991 "SharePoint Factbox"
     begin
         exit(GReocrdID);
     end;
+    #endregion Global Procedure
 
+
+
+
+    #region Global Variable
     var
         GReocrdID: RecordId;
-
-        BooleanVar: boolean;
-
-    var
-        ParentFolderURL: Text;
-        FinalURL: Text;
-        RetrieveURL: Text;
-        lRecordId: RecordId;
         ActionVisible: Boolean;
 
+    #endregion Global Variable
+    #region local variable
+    var
 
+        FinalURL: Text;
+        ParentFolderURL: Text;
+        RetrieveURL: Text;
+        SharepointMgt: Codeunit "Sharepoint Management";
+    #endregion local variable
+
+
+
+    #region Events
     [IntegrationEvent(false, false)]
-    local procedure OnBeforeGetParentDirectoryFolderURL(lRecordId: RecordId; Ishandle: Boolean)
+    local procedure OnBeforeGetParentDirectoryFolderURL(RecordId: RecordId; Ishandle: Boolean)
     begin
-
     end;
 
     [IntegrationEvent(false, false)]
-    local procedure OnBeforeDeleteSharepointFile(lRecordId: RecordId; Ishandle: Boolean)
+    local procedure OnBeforeUpload(var SharePointListLog: Record "SharePoint List Log"; RecordId: RecordId; Ishandle: Boolean)
     begin
-
     end;
 
     [IntegrationEvent(false, false)]
-    local procedure OnBeforeActionSharePoint(lRecordId: RecordId; Ishandle: Boolean)
+    local procedure OnBeforeDownload(var SharePointListLog: Record "SharePoint List Log")
     begin
-
     end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeDeleteSharepointFile(var SharePointListLog: Record "SharePoint List Log"; RecordId: RecordId; Ishandle: Boolean)
+    begin
+    end;
+    #endregion Events
+
+
 }
