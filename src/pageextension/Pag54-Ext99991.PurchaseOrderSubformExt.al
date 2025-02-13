@@ -14,7 +14,7 @@ pageextension 99991 "Purchase Order Subform Ext" extends "Purchase Order Subform
                     SharePointListLogSubPage: Page "SharePoint List Log Subform";
                     SharePointListLog: Record "SharePoint List Log";
                 begin
-                    SharePointListLog.SetRange("Table ID", Database::"Sales Line");
+                    SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
                     SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
                     SharePointListLogSubPage.SetRecord(Rec.RecordId, true);
                     SharePointListLogSubPage.SetTableView(SharePointListLog);

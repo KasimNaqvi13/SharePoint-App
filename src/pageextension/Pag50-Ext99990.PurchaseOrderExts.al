@@ -8,7 +8,7 @@ pageextension 99990 "Purchase Order Exts" extends "Purchase Order" //50
             {
                 ApplicationArea = all;
                 Caption = 'Share Point Attachment';
-                SubPageLink = "Code PK 1" = field("No."), "SharePoint Enum" = field("Document Type"), "Table ID" = const(Database::"Sales Header");
+                SubPageLink = "Code PK 1" = field("No."), "SharePoint Enum" = field("Document Type"), "Table ID" = const(Database::"Purchase Header");
             }
         }
     }
