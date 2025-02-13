@@ -99,7 +99,7 @@ codeunit 99990 "Sharepoint Management"
 
 
     #region Upload Sharepoint File
-    procedure SaveFile(FileDirectory: Text; FileName: Text; IS: InStream; RecordID: RecordId; Inst: InStream): Boolean
+    procedure SaveFile(FileDirectory: Text; FileName: Text; IS: InStream; RecordID: RecordId): Boolean
     var
         SharePointFile: Record "SharePoint File" temporary;
         IsSuccess: Boolean;

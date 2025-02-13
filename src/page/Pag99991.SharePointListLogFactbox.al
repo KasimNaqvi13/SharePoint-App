@@ -68,7 +68,7 @@ page 99991 "SharePointListLog Factbox"
                     foreach currentFile in files do begin
                         FromFileName := CurrentFile.FileName;
                         CurrentFile.CreateInStream(Inst);
-                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord(), Inst);
+                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord());
                     end;
                 end;
             }

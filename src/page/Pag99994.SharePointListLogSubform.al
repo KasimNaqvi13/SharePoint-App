@@ -68,7 +68,7 @@ page 99994 "SharePoint List Log Subform"
                     foreach currentFile in files do begin
                         FromFileName := CurrentFile.FileName;
                         CurrentFile.CreateInStream(Inst);
-                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord(), Inst);
+                        SharepointMgt.SaveFile(FinalURL, FromFileName, Inst, Getrecord());
                     end;
                 end;
             }

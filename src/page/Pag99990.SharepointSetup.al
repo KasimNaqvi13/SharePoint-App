@@ -46,6 +46,14 @@ page 99990 "Sharepoint Setup"
                 {
                     ShowMandatory = true;
                 }
+                field("Purchase Order Flow"; Rec."Purchase Order Flow")
+                {
+                    ToolTip = 'Specifies the value of the Purchase Order Flow field.', Comment = '%';
+                }
+                field("Sales Order Flow"; Rec."Sales Order Flow")
+                {
+                    ToolTip = 'Specifies the value of the Sales Order Flow field.', Comment = '%';
+                }
             }
 
             group(Directory)
