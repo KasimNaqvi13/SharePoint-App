@@ -274,10 +274,6 @@ codeunit 99990 "Sharepoint Management"
     end;
     #endregion GetDetailsFromServerRelativeURL
 
-
-
-
-
     #region Folder Creation
     procedure CreateFolders(RecordID: RecordId; FileDirectory: Text; SharepointFolder: Record "SharePoint Folder")
     var
