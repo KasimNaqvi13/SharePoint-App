@@ -10,21 +10,19 @@
   "help": "https://in.linkedin.com/in/mir-kasim-ali-naqvi-04971a236",
   "url": "https://in.linkedin.com/in/mir-kasim-ali-naqvi-04971a236",
   "logo": "./Resources/Applogo/BC image.jpg",
-  "dependencies": [
-
-  ],
+  "dependencies": [],
   "screenshots": [],
   "platform": "24.5.23489.23968",
   "application": "24.5.23489.23968",
   "idRanges": [
-      {
-          "from": 99990,
-          "to": 99999
-      },
-      {
-        "from": 50000,
-        "to": 50100
-      }
+    {
+      "from": 99990,
+      "to": 99999
+    },
+    {
+      "from": 50000,
+      "to": 50100
+    }
   ],
   "target": "Cloud",
   "contextSensitiveHelpUrl": "https://mysite.com/documentation/",
@@ -32,47 +30,43 @@
     "EN-IN"
   ],
   "features": [
-        "AllTranslationItems",
-        "ExcludeGeneratedTranslations",
-        "GenerateCaptions",
-        "GenerateLockedTranslations",
-        "NoImplicitWith",
-        "NoPromotedActionProperties",
-        "TranslationFile",
-        "UseLegacyAnalyzerStrategy"  
+    "AllTranslationItems",
+    "ExcludeGeneratedTranslations",
+    "GenerateCaptions",
+    "GenerateLockedTranslations",
+    "NoImplicitWith",
+    "NoPromotedActionProperties",
+    "TranslationFile",
+    "UseLegacyAnalyzerStrategy"
   ],
-
-  "internalsVisibleTo": [
-
-  ],
+  "internalsVisibleTo": [],
   "propagateDependencies": true,
-
   "preprocessorSymbols": [
-    "Conditional directives","Regions","Pragmas",
+    "Conditional directives",
+    "Regions",
+    "Pragmas",
     "NaqviDebug"
   ],
-"applicationInsightsConnectionString": "azure app secrets retrieval by extensions",
-"keyVaultUrls": [
-    "https://myfirstkeyvault.vault.azure.net", "https://mysecondkeyvault.vault.azure.net"
-],
-"suppressWarnings": [
-    "AA0001"
-],
+  "applicationInsightsConnectionString": "azure app secrets retrieval by extensions",
+  "keyVaultUrls": [
+    "https://myfirstkeyvault.vault.azure.net",
+    "https://mysecondkeyvault.vault.azure.net"
+  ],
+  "suppressWarnings": [],
   "resourceExposurePolicy": {
-      "allowDebugging": false,
-      "allowDownloadingSource": false,
-      "includeSourceInSymbolFile": false,
-      "applyToDevExtension": false
+    "allowDebugging": false,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false,
+    "applyToDevExtension": false
   },
-  "source": {
-
-  },
+  "source": {},
   "build": {
     "by": "azure",
     "url": "pipelines"
   },
-  "alternateIds" :[],
+  "alternateIds": [],
   "runtime": "14.2",
-  "resourceFolders": ["Resources"]
+  "resourceFolders": [
+    "Resources"
+  ]
 }
- 

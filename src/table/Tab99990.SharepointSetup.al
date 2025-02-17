@@ -12,7 +12,7 @@ table 99990 "Sharepoint Setup"
     InherentEntitlements = rimdx;
     InherentPermissions = rimdx;
     // LinkedObject = true;
-#Pragma warning disable
+    // #Pragma warning disable
     // LinkedInTransaction = true;
     PasteIsValid = true;
     ReplicateData = false;

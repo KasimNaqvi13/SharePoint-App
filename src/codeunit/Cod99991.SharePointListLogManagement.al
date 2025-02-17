@@ -112,7 +112,6 @@ codeunit 99991 "SharePoint List Log Management"
             OnBeforeModifySharePointListLog(SharePointListLog, SharePointFile, RecordID);
             SharePointListLog.Modify(true);
             OnBeforeAfterSharePointListLog(SharePointListLog, RecordID);
-
         end;
     end;
 
@@ -297,10 +296,11 @@ codeunit 99991 "SharePoint List Log Management"
         SalesLineRec: Record "Sales Line";
     begin
         SharepointSetupRec.Get();
-        if not SharepointSetupRec."Purchase Order Flow" then
+        if not SharepointSetupRec."Sales Order Flow" then
             exit;
         //Header
         SharePointListLog.SetRange("Table Record ID", SalesHeader.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Header");
         if SharePointListLog.FindSet() then begin
             repeat
                 Clear(DocumentInStream);
@@ -338,56 +338,52 @@ codeunit 99991 "SharePoint List Log Management"
 
     #region SQ to SO
 
-    // [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales-Quote to Order", OnAfterOnRun, '', false, false)]
-    // local procedure "Sales-Quote to Order_OnAfterOnRun"(var SalesHeader: Record "Sales Header"; var SalesOrderHeader: Record "Sales Header")
-    // var
-    //     SharePointListLog: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    //     DocumentInStream: InStream;
-    //     SharepointSetupRec: Record "Sharepoint Setup";
-    //     SalesQuoteLineRec: Record "Sales Line";
-    //     SalesOrderLineRec: Record "Sales Line";
-    // begin
-    //     SharepointSetupRec.Get();
-    //     if not SharepointSetupRec."Sales Order Flow" then
-    //         exit;
-
-    //     //Header
-    //     SharePointListLog.SetRange("Table ID", Database::"Sales Header");
-    //     SharePointListLog.SetRange("Table Record ID", SalesHeader.RecordId);
-    //     if SharePointListLog.FindSet() then begin
-    //         repeat
-    //             Clear(DocumentInStream);
-    //             SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-    //             if SharepointSetupRec."Purchase Directory" <> '' then
-    //                 SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId)
-    //             else
-    //                 SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId)
-    //         until SharePointListLog.Next() = 0;
-    //     end;
-    //     SalesOrderLineRec.SetRange("Document Type", SalesOrderHeader."Document Type");
-    //     SalesOrderLineRec.SetRange("Document No.", SalesOrderHeader."No.");
-    //     if SalesOrderLineRec.FindSet() then begin
-    //         repeat
-    //             SalesOrderLineRec.Get(SalesOrderHeader."Document Type", SalesOrderHeader."No.", SalesOrderLineRec."Line No.");
-    //             SharePointListLog.Reset();
-    //             SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
-    //             SharePointListLog.SetRange("Table Record ID", PurchOrderLineRec.RecordId);
-    //             if SharePointListLog.FindSet() then begin
-    //                 repeat
-    //                     Clear(DocumentInStream);
-    //                     SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-    //                     if SharepointSetupRec."Purchase Directory" <> '' then
-    //                         SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId)
-    //                     else
-    //                         SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId)
-    //                 until SharePointListLog.Next() = 0;
-    //             end;
-    //         until SalesOrderLineRec.Next() = 0;
-    //     end;
-    // end;
-
-
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales-Quote to Order", OnAfterOnRun, '', false, false)]
+    local procedure "Sales-Quote to Order_OnAfterOnRun"(var SalesHeader: Record "Sales Header"; var SalesOrderHeader: Record "Sales Header")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+        DocumentInStream: InStream;
+        SharepointSetupRec: Record "Sharepoint Setup";
+        SalesQuoteLineRec: Record "Sales Line";
+        SalesOrderLineRec: Record "Sales Line";
+    begin
+        SharepointSetupRec.Get();
+        if not SharepointSetupRec."Sales Order Flow" then
+            exit;
+        //Header
+        SharePointListLog.SetRange("Table Record ID", SalesHeader.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Header");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                Clear(DocumentInStream);
+                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                if SharepointSetupRec."Purchase Directory" <> '' then
+                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId)
+                else
+                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId);
+            until SharePointListLog.Next() = 0;
+        end;
+        //Line
+        SalesOrderLineRec.SetRange("Document Type", SalesOrderHeader."Document Type");
+        SalesOrderLineRec.SetRange("Document No.", SalesOrderHeader."No.");
+        if SalesOrderLineRec.FindSet() then begin
+            // PurchaseOrderLine
+            if SalesQuoteLineRec.Get(SalesHeader."Document Type", SalesHeader."No.", SalesOrderLineRec."Line No.") then begin
+                SharePointListLog.SetRange("Table Record ID", SalesQuoteLineRec.RecordId);
+                if SharePointListLog.FindSet() then begin
+                    repeat
+                        Clear(DocumentInStream);
+                        SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                        if SharepointSetupRec."Purchase Directory" <> '' then
+                            SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId)
+                        else
+                            SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId);
+                    until SharePointListLog.Next() = 0;
+                end;
+            end;
+        end;
+    end;
     #endregion SQ to SO
 
 
@@ -438,148 +434,132 @@ codeunit 99991 "SharePoint List Log Management"
 
     // #region Sharepoint-Deletion
     // //--------------Purchase----Start-------------------------//
-    // [EventSubscriber(ObjectType::Table, Database::"Purchase Header", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventPurchaseHeader(var Rec: Record "Purchase Header")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Header", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventPurchaseHeader(var Rec: Record "Purchase Header")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
 
-    // [EventSubscriber(ObjectType::Table, Database::"Purchase Line", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventPurchaseLine(var Rec: Record "Purchase Line")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Line", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventPurchaseLine(var Rec: Record "Purchase Line")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
     // //--------------Purchase----end-------------------------//
 
     // //--------------Purchase Archive----start-------------------------//
-    // [EventSubscriber(ObjectType::Table, Database::"Purchase Header Archive", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventPurchaseArchiveHeader(var Rec: Record "Purchase Header Archive")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Header Archive", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventPurchaseArchiveHeader(var Rec: Record "Purchase Header Archive")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Header Archive");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
 
-    // [EventSubscriber(ObjectType::Table, Database::"Purchase Line Archive", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventPurchaseArchiveLine(var Rec: Record "Purchase Line Archive")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Line Archive", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventPurchaseArchiveLine(var Rec: Record "Purchase Line Archive")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Line Archive");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
     // //--------------Purchase Archive----end-------------------------//
 
 
     // //--------------Sales----Start-------------------------//
-    // [EventSubscriber(ObjectType::Table, Database::"Sales Header", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventSalesHeader(var Rec: Record "Sales Header")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Sales Header", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventSalesHeader(var Rec: Record "Sales Header")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Header");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
 
-    // [EventSubscriber(ObjectType::Table, Database::"Sales Line", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventSalesLine(var Rec: Record "Sales Line")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Sales Line", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventSalesLine(var Rec: Record "Sales Line")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Line");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
     // //--------------Sales----End-------------------------//
 
     // //--------------Sales Archive----Start-------------------------//
-    // [EventSubscriber(ObjectType::Table, Database::"Sales Header Archive", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventSalesHeaderArchive(var Rec: Record "Sales Header Archive")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Sales Header Archive", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventSalesHeaderArchive(var Rec: Record "Sales Header Archive")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Header Archive");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
 
-    // [EventSubscriber(ObjectType::Table, Database::"Sales Line Archive", OnAfterDeleteEvent, '', false, false)]
-    // local procedure OnAfterDeleteEventSalesLineArchive(var Rec: Record "Sales Line Archive")
-    // var
-    //     E2eSharepointRec: Record "SharePoint List Log";
-    //     SharepointMgt: Codeunit "Sharepoint Management";
-    // begin
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then begin
-    //         repeat
-    //             SharepointMgt.DeleteFile(E2eSharepointRec."Server Relative Url");
-    //         until E2eSharepointRec.Next() = 0;
-    //     end;
-    //     E2eSharepointRec.SetRange("Record ID", Rec.RecordId);
-    //     if E2eSharepointRec.FindSet() then
-    //         E2eSharepointRec.DeleteAll();
-    // end;
+    [EventSubscriber(ObjectType::Table, Database::"Sales Line Archive", OnAfterDeleteEvent, '', false, false)]
+    local procedure OnAfterDeleteEventSalesLineArchive(var Rec: Record "Sales Line Archive")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+    begin
+        SharePointListLog.SetRange("Table Record ID", Rec.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Sales Line Archive");
+        if SharePointListLog.FindSet() then begin
+            repeat
+                SharepointMgt.DeleteFile(SharePointListLog, SharePointListLog."Server Relative Url");
+            until SharePointListLog.Next() = 0;
+        end;
+    end;
     // //--------------Sales Archive----End-------------------------//
     // #endregion Sharepoint-Deletion
 
