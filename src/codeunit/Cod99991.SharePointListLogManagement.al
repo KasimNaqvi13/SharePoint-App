@@ -118,117 +118,7 @@ codeunit 99991 "SharePoint List Log Management"
 
 
 
-    #region Purchase Quote Archive
-    // //Purchase Quotes ---> Purchase Quotes Archive
-    // //Header
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::ArchiveManagement, OnAfterPurchHeaderArchiveInsert, '', false, false)]
-    local procedure ArchiveManagement_OnAfterPurchHeaderArchiveInsert(var PurchaseHeaderArchive: Record "Purchase Header Archive"; PurchaseHeader: Record "Purchase Header")
-    var
-        SharePointListLog: Record "SharePoint List Log";
-        SharepointMgt: Codeunit "Sharepoint Management";
-        DocumentInStream: InStream;
-        SharepointSetupRec: Record "Sharepoint Setup";
-    begin
-        SharepointSetupRec.Get();
-        if not SharepointSetupRec."Purchase Order Flow" then
-            exit;
-        SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
-        SharePointListLog.SetRange("Table Record ID", PurchaseHeader.RecordId);
-        if SharePointListLog.FindSet() then begin
-            repeat
-                Clear(DocumentInStream);
-                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-                if SharepointSetupRec."Purchase Directory" <> '' then
-                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchaseHeaderArchive.RecordId)
-                else
-                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchaseHeaderArchive.RecordId);
-
-            until SharePointListLog.Next() = 0;
-        end;
-    end;
-    //Line
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::ArchiveManagement, OnAfterStorePurchLineArchive, '', false, false)]
-    local procedure ArchiveManagement_OnAfterStorePurchLineArchive(var PurchHeader: Record "Purchase Header"; var PurchLine: Record "Purchase Line"; var PurchHeaderArchive: Record "Purchase Header Archive"; var PurchLineArchive: Record "Purchase Line Archive")
-    var
-        SharePointListLog: Record "SharePoint List Log";
-        SharepointMgt: Codeunit "Sharepoint Management";
-        DocumentInStream: InStream;
-        SharepointSetupRec: Record "Sharepoint Setup";
-    begin
-        SharepointSetupRec.Get();
-        if not SharepointSetupRec."Purchase Order Flow" then
-            exit;
-        SharePointListLog.SetRange("Table Record ID", PurchLine.RecordId);
-        if SharePointListLog.FindSet() then begin
-            repeat
-                Clear(DocumentInStream);
-                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-                if SharepointSetupRec."Purchase Directory" <> '' then
-                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchLineArchive.RecordId)
-                else
-                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchLineArchive.RecordId);
-            until SharePointListLog.Next() = 0;
-        end;
-    end;
-    // //////////end///////////Neeed to take the subcriber after the Header and Line insert. BC can Roll back the transaction but We Can't do that for sharepoint
-    #endregion Purchase Quote Archive
-
-    #region PQ to PO
-    // // Purchase Quote to Purchase order
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Quote to Order", OnBeforeDeletePurchQuote, '', false, false)]
-    local procedure "Purch.-Quote to Order_OnBeforeDeletePurchQuote"(var QuotePurchHeader: Record "Purchase Header"; var OrderPurchHeader: Record "Purchase Header"; var IsHandled: Boolean)
-    var
-        SharePointListLog: Record "SharePoint List Log";
-        SharepointMgt: Codeunit "Sharepoint Management";
-        DocumentInStream: InStream;
-        SharepointSetupRec: Record "Sharepoint Setup";
-        TempBlobCu: Codeunit "Temp Blob";
-        //
-        PurchQuoteLineRec: Record "Purchase Line";
-        PurchaseLineRec: Record "Purchase Line";
-    begin
-        SharepointSetupRec.Get();
-        if not SharepointSetupRec."Purchase Order Flow" then
-            exit;
-        //Header
-        SharePointListLog.SetRange("Table Record ID", QuotePurchHeader.RecordId);
-        if SharePointListLog.FindSet() then begin
-            repeat
-                Clear(DocumentInStream);
-                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-                if SharepointSetupRec."Purchase Directory" <> '' then
-                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, OrderPurchHeader.RecordId)
-                else
-                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, OrderPurchHeader.RecordId);
-            until SharePointListLog.Next() = 0;
-        end;
-        //Line
-        PurchQuoteLineRec.Reset();
-        PurchQuoteLineRec.SetRange("Document No.", QuotePurchHeader."No.");
-        PurchQuoteLineRec.SetRange("Document Type", QuotePurchHeader."Document Type");
-        if PurchQuoteLineRec.FindSet() then begin
-            repeat
-                if PurchaseLineRec.Get(QuotePurchHeader."Document Type", QuotePurchHeader."No.", PurchQuoteLineRec."Line No.") then begin
-                    SharePointListLog.SetRange("Table Record ID", PurchQuoteLineRec.RecordId);
-                    if SharePointListLog.FindSet() then begin
-                        repeat
-                            Clear(DocumentInStream);
-                            SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
-                            if SharepointSetupRec."Purchase Directory" <> '' then
-                                SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchaseLineRec.RecordId)
-                            else
-                                SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchaseLineRec.RecordId);
-                        until SharePointListLog.Next() = 0;
-                    end;
-                end;
-            until PurchQuoteLineRec.Next() = 0;
-        end;
-    end;
-    #endregion PQ to PO
-
-
-
-    #region Purchase Order Archive
+    #region Purchase Archive
     // Purchase Order ----> Purchase Order Archive 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::ArchiveManagement, OnAfterStorePurchDocument, '', false, false)]
     local procedure ArchiveManagement_OnAfterStorePurchDocument(var PurchaseHeader: Record "Purchase Header"; var PurchaseHeaderArchive: Record "Purchase Header Archive")
@@ -246,6 +136,7 @@ codeunit 99991 "SharePoint List Log Management"
             exit;
         //Header
         SharePointListLog.SetRange("Table Record ID", PurchaseHeader.RecordId);
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
         if SharePointListLog.FindSet() then begin
             repeat
                 Clear(DocumentInStream);
@@ -264,7 +155,9 @@ codeunit 99991 "SharePoint List Log Management"
         if PurchaseLineArchive.FindSet() then begin
             // PurchaseOrderLine
             if PurchLine.Get(PurchaseHeader."Document Type", PurchaseHeader."No.", PurchaseLineArchive."Line No.") then begin
+                SharePointListLog.Reset();
                 SharePointListLog.SetRange("Table Record ID", PurchLine.RecordId);
+                SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
                 if SharePointListLog.FindSet() then begin
                     repeat
                         Clear(DocumentInStream);
@@ -279,16 +172,253 @@ codeunit 99991 "SharePoint List Log Management"
         end;
     end;
     // Purchase Order ------Purchase Order Archive
-    #endregion Purchase Order Archive
+    #endregion Purchase Archive
 
-    // Dragon
 
-    // Purchase Order ------> Posted Purchase Order Invoice
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post", OnFinalizePostingOnBeforeUpdateAfterPosting, '', false, false)]
-    local procedure "Purch.-Post_OnFinalizePostingOnBeforeUpdateAfterPosting"(var PurchHeader: Record "Purchase Header"; var TempDropShptPostBuffer: Record "Drop Shpt. Post. Buffer" temporary; var EverythingInvoiced: Boolean; var IsHandled: Boolean; var TempPurchLine: Record "Purchase Line" temporary)
+    #region PQ to PO
+    // // Purchase Quote to Purchase order
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Quote to Order", OnBeforeDeletePurchQuote, '', false, false)]
+    local procedure "Purch.-Quote to Order_OnBeforeDeletePurchQuote"(var QuotePurchHeader: Record "Purchase Header"; var OrderPurchHeader: Record "Purchase Header"; var IsHandled: Boolean)
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+        DocumentInStream: InStream;
+        SharepointSetupRec: Record "Sharepoint Setup";
+        //
+        PurchQuoteLineRec: Record "Purchase Line";
+        PurchaseOrderLineRec: Record "Purchase Line";
     begin
-        Message('Header no %1 and Line No %2', PurchHeader."No.", TempPurchLine."Line No.");
+        SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
+        //Header
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
+        SharePointListLog.SetRange("Table Record ID", QuotePurchHeader.RecordId);
+        if SharePointListLog.FindSet() then begin
+            repeat
+                Clear(DocumentInStream);
+                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                if SharepointSetupRec."Purchase Directory" <> '' then
+                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, OrderPurchHeader.RecordId)
+                else
+                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, OrderPurchHeader.RecordId);
+            until SharePointListLog.Next() = 0;
+        end;
+        //Line
+        PurchQuoteLineRec.Reset();
+        PurchQuoteLineRec.SetRange("Document No.", QuotePurchHeader."No.");
+        PurchQuoteLineRec.SetRange("Document Type", QuotePurchHeader."Document Type");
+        if PurchQuoteLineRec.FindSet() then begin
+            repeat
+                if PurchaseOrderLineRec.Get(QuotePurchHeader."Document Type", QuotePurchHeader."No.", PurchQuoteLineRec."Line No.") then begin
+                    SharePointListLog.Reset();
+                    SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
+                    SharePointListLog.SetRange("Table Record ID", PurchQuoteLineRec.RecordId);
+                    if SharePointListLog.FindSet() then begin
+                        repeat
+                            Clear(DocumentInStream);
+                            SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                            if SharepointSetupRec."Purchase Directory" <> '' then
+                                SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchaseOrderLineRec.RecordId)
+                            else
+                                SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchaseOrderLineRec.RecordId);
+                        until SharePointListLog.Next() = 0;
+                    end;
+                end;
+            until PurchQuoteLineRec.Next() = 0;
+        end;
     end;
+    #endregion PQ to PO
+
+    #region PO to Purch Inv
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post (Yes/No)", OnAfterPost, '', false, false)]
+    local procedure "Purch.-Post (Yes/No)_OnAfterPost"(var PurchaseHeader: Record "Purchase Header")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+        DocumentInStream: InStream;
+        SharepointSetupRec: Record "Sharepoint Setup";
+        PurchOrderLineRec: Record "Purchase Line";
+        PurchInvHeaderRec: Record "Purch. Inv. Header";
+        PurchInvLineRec: Record "Purch. Inv. Line";
+    begin
+        SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
+
+        PurchInvHeaderRec.Get(PurchaseHeader."Posting No.");
+        //Header
+        SharePointListLog.SetRange("Table ID", Database::"Purchase Header");
+        SharePointListLog.SetRange("Table Record ID", PurchaseHeader.RecordId);
+        if SharePointListLog.FindSet() then begin
+            repeat
+                Clear(DocumentInStream);
+                SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                if SharepointSetupRec."Purchase Directory" <> '' then
+                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchInvHeaderRec.RecordId)
+                else
+                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchInvHeaderRec.RecordId)
+            until SharePointListLog.Next() = 0;
+        end;
+        PurchOrderLineRec.SetRange("Document Type", PurchaseHeader."Document Type");
+        PurchOrderLineRec.SetRange("Document No.", PurchaseHeader."No.");
+        if PurchOrderLineRec.FindSet() then begin
+            repeat
+                PurchInvLineRec.Get(PurchInvHeaderRec."No.", PurchOrderLineRec."Line No.");
+                SharePointListLog.Reset();
+                SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
+                SharePointListLog.SetRange("Table Record ID", PurchOrderLineRec.RecordId);
+                if SharePointListLog.FindSet() then begin
+                    repeat
+                        Clear(DocumentInStream);
+                        SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                        if SharepointSetupRec."Purchase Directory" <> '' then
+                            SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, PurchOrderLineRec.RecordId)
+                        else
+                            SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, PurchOrderLineRec.RecordId)
+                    until SharePointListLog.Next() = 0;
+                end;
+            until PurchOrderLineRec.Next() = 0;
+        end;
+    end;
+    #endregion PO to Purch Inv
+
+
+
+    #region Sales Archive
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::ArchiveManagement, OnAfterStoreSalesDocument, '', false, false)]
+    local procedure ArchiveManagement_OnAfterStoreSalesDocument(var SalesHeader: Record "Sales Header"; var SalesHeaderArchive: Record "Sales Header Archive")
+    var
+        SharePointListLog: Record "SharePoint List Log";
+        SharepointMgt: Codeunit "Sharepoint Management";
+        DocumentInStream: InStream;
+        SharepointSetupRec: Record "Sharepoint Setup";
+        SalesLineArchiveRec: Record "Sales Line Archive";
+        SalesLineRec: Record "Sales Line";
+    begin
+        SharepointSetupRec.Get();
+        if not SharepointSetupRec."Purchase Order Flow" then
+            exit;
+        //Header
+        SharePointListLog.SetRange("Table Record ID", SalesHeader.RecordId);
+        if SharePointListLog.FindSet() then begin
+            repeat
+                Clear(DocumentInStream);
+                SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                if SharepointSetupRec."Purchase Directory" <> '' then
+                    SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesHeaderArchive.RecordId)
+                else
+                    SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesHeaderArchive.RecordId);
+            until SharePointListLog.Next() = 0;
+        end;
+        //Line
+        SalesLineArchiveRec.SetRange("Document Type", SalesHeaderArchive."Document Type");
+        SalesLineArchiveRec.SetRange("Document No.", SalesHeaderArchive."No.");
+        SalesLineArchiveRec.SetRange("Doc. No. Occurrence", SalesHeaderArchive."Doc. No. Occurrence");
+        SalesLineArchiveRec.SetRange("Version No.", SalesHeaderArchive."Version No.");
+        if SalesLineArchiveRec.FindSet() then begin
+            // PurchaseOrderLine
+            if SalesLineRec.Get(SalesHeader."Document Type", SalesHeader."No.", SalesLineArchiveRec."Line No.") then begin
+                SharePointListLog.SetRange("Table Record ID", SalesLineRec.RecordId);
+                if SharePointListLog.FindSet() then begin
+                    repeat
+                        Clear(DocumentInStream);
+                        SharepointMGT.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+                        if SharepointSetupRec."Purchase Directory" <> '' then
+                            SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesLineArchiveRec.RecordId)
+                        else
+                            SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesLineArchiveRec.RecordId);
+                    until SharePointListLog.Next() = 0;
+                end;
+            end;
+        end;
+    end;
+    #endregion Sales Archive
+
+
+    #region SQ to SO
+
+    // [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales-Quote to Order", OnAfterOnRun, '', false, false)]
+    // local procedure "Sales-Quote to Order_OnAfterOnRun"(var SalesHeader: Record "Sales Header"; var SalesOrderHeader: Record "Sales Header")
+    // var
+    //     SharePointListLog: Record "SharePoint List Log";
+    //     SharepointMgt: Codeunit "Sharepoint Management";
+    //     DocumentInStream: InStream;
+    //     SharepointSetupRec: Record "Sharepoint Setup";
+    //     SalesQuoteLineRec: Record "Sales Line";
+    //     SalesOrderLineRec: Record "Sales Line";
+    // begin
+    //     SharepointSetupRec.Get();
+    //     if not SharepointSetupRec."Sales Order Flow" then
+    //         exit;
+
+    //     //Header
+    //     SharePointListLog.SetRange("Table ID", Database::"Sales Header");
+    //     SharePointListLog.SetRange("Table Record ID", SalesHeader.RecordId);
+    //     if SharePointListLog.FindSet() then begin
+    //         repeat
+    //             Clear(DocumentInStream);
+    //             SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+    //             if SharepointSetupRec."Purchase Directory" <> '' then
+    //                 SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId)
+    //             else
+    //                 SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderHeader.RecordId)
+    //         until SharePointListLog.Next() = 0;
+    //     end;
+    //     SalesOrderLineRec.SetRange("Document Type", SalesOrderHeader."Document Type");
+    //     SalesOrderLineRec.SetRange("Document No.", SalesOrderHeader."No.");
+    //     if SalesOrderLineRec.FindSet() then begin
+    //         repeat
+    //             SalesOrderLineRec.Get(SalesOrderHeader."Document Type", SalesOrderHeader."No.", SalesOrderLineRec."Line No.");
+    //             SharePointListLog.Reset();
+    //             SharePointListLog.SetRange("Table ID", Database::"Purchase Line");
+    //             SharePointListLog.SetRange("Table Record ID", PurchOrderLineRec.RecordId);
+    //             if SharePointListLog.FindSet() then begin
+    //                 repeat
+    //                     Clear(DocumentInStream);
+    //                     SharepointMgt.OpenFile(SharePointListLog."Server Relative Url", DocumentInStream, false);
+    //                     if SharepointSetupRec."Purchase Directory" <> '' then
+    //                         SharepointMgt.SaveFile(SharepointSetupRec."Purchase Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId)
+    //                     else
+    //                         SharepointMgt.SaveFile(SharepointSetupRec."Default Directory", SharePointListLog.Name, DocumentInStream, SalesOrderLineRec.RecordId)
+    //                 until SharePointListLog.Next() = 0;
+    //             end;
+    //         until SalesOrderLineRec.Next() = 0;
+    //     end;
+    // end;
+
+
+    #endregion SQ to SO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

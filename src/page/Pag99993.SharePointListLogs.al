@@ -5,9 +5,10 @@ page 99993 "SharePoint List Logs"
     PageType = List;
     SourceTable = "SharePoint List Log";
     UsageCategory = Lists;
-    // InsertAllowed = false;
+    InsertAllowed = false;
     Editable = true;
-    // ModifyAllowed = false;
+    ModifyAllowed = false;
+    DeleteAllowed = false;
 
     layout
     {

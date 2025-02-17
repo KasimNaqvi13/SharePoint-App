@@ -2,7 +2,7 @@ pageextension 99991 "Purchase Order Subform Ext" extends "Purchase Order Subform
 {
     actions
     {
-        addlast(Page)
+        addafter(DocAttach)
         {
             action("Share-Point Attachment")
             {
