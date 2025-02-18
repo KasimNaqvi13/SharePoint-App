@@ -431,8 +431,7 @@ codeunit 99991 "SharePoint List Log Management"
 
 
 
-
-    // #region Sharepoint-Deletion
+    #region Sharepoint-Deletion
     // //--------------Purchase----Start-------------------------//
     [EventSubscriber(ObjectType::Table, Database::"Purchase Header", OnAfterDeleteEvent, '', false, false)]
     local procedure OnAfterDeleteEventPurchaseHeader(var Rec: Record "Purchase Header")
@@ -561,7 +560,7 @@ codeunit 99991 "SharePoint List Log Management"
         end;
     end;
     // //--------------Sales Archive----End-------------------------//
-    // #endregion Sharepoint-Deletion
+    #endregion Sharepoint-Deletion
 
 
 

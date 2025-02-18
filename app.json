@@ -4,7 +4,7 @@
   "publisher": "CETAS Information Technology Pvt. Ltd",
   "brief": "A Dynamic Sharepoint App help user to Store there Records attchments",
   "description": "Dynamics SharePoint app for Business Central, which likely involves integrating SharePoint with Business Central to streamline document management, automate workflows, and enhance data sharing. This app could enable users to store, retrieve, and manage Business Central records directly within SharePoint, leveraging APIs, OAuth authentication, and JSON-based data exchange.",
-  "version": "1.0.0.0",
+  "version": "1.0.0.2",
   "privacyStatement": "https://cetastech.com/",
   "EULA": "",
   "help": "https://cetastech.com/",
@@ -64,7 +64,7 @@
     "url": "pipelines"
   },
   "alternateIds": [],
-  "runtime": "14.2",
+  "runtime": "14.0",
   "resourceFolders": [
     "Resources"
   ]

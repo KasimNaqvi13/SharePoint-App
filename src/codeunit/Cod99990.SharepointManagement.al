@@ -315,7 +315,7 @@ codeunit 99990 "Sharepoint Management"
         this.CreatedDefultFolder(folderPath, SharepointFolder);
         for i := 1 to RecRef.KeyIndex(1).FieldCount do begin
             FieldRef := RecRef.KeyIndex(1).FieldIndex(i);
-            folderPath += '/' + CopyStr(Format(FieldRef.Value), 1, 25);
+            folderPath += '/' + CopyStr(DelChr(Format(FieldRef.Value), '=', '/\'), 1, 25);
             this.CreatedDefultFolder(folderPath, SharepointFolder);
         end;
         PathUri := folderPath;

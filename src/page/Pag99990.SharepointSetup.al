@@ -84,6 +84,25 @@ page 99990 "Sharepoint Setup"
         }
     }
 
+    actions
+    {
+        area(Processing)
+        {
+            action("Check Connection")
+            {
+                trigger OnAction()
+                var
+                    SharePointMgt: Codeunit "Sharepoint Management";
+                begin
+                    if SharePointMgt.InitializeConnection() then
+                        Message('Connected')
+                    else
+                        Message('Failed to connect');
+                end;
+            }
+        }
+    }
+
     trigger OnOpenPage()
     begin
         Rec.Reset();
